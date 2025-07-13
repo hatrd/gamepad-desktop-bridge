@@ -5,8 +5,12 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ published ]
+  workflow_call:
+    inputs:
+      upload_url:
+        description: 'Upload URL for release assets'
+        required: false
+        type: string
 
 jobs:
   build-linux:
@@ -70,12 +74,12 @@ jobs:
         path: build/*.tar.gz
         
     - name: Upload to release
-      if: github.event_name == 'release'
+      if: inputs.upload_url != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: build/xbox-controller-api-${{ github.event.release.tag_name }}-linux-x64.tar.gz
-        asset_name: xbox-controller-api-${{ github.event.release.tag_name }}-linux-x64.tar.gz
+        upload_url: ${{ inputs.upload_url }}
+        asset_path: build/xbox-controller-api-linux-x64.tar.gz
+        asset_name: xbox-controller-api-linux-x64.tar.gz
         asset_content_type: application/gzip

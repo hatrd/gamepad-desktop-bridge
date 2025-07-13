@@ -5,8 +5,12 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ published ]
+  workflow_call:
+    inputs:
+      upload_url:
+        description: 'Upload URL for release assets'
+        required: false
+        type: string
 
 jobs:
   build-windows:
@@ -84,17 +88,19 @@ jobs:
         cmake .. \
           -DCMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/SDL3-install \
           -DSDL_SHARED=ON \
           -DSDL_STATIC=OFF \
           -GNinja
         ninja
-        sudo ninja install
+        ninja install
         
     - name: Configure CMake
       run: |
         cmake -B build -S . \
           -DCMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }} \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/SDL3-install \
           -GNinja
           
     - name: Build
@@ -107,8 +113,29 @@ jobs:
     - name: Package
       run: |
         mkdir -p package/xbox-controller-api
-        cp build/*.exe package/xbox-controller-api/
-        cp build/SDL*.dll package/xbox-controller-api/ || true
+        
+        # Copy main executable
+        cp build/*.exe package/xbox-controller-api/ || true
+        
+        # Copy SDL3 DLLs
+        cp ${{ github.workspace }}/SDL3-install/bin/*.dll package/xbox-controller-api/ || true
+        
+        # Copy MinGW runtime DLLs
+        if [ "${{ matrix.arch }}" = "x64" ]; then
+          cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll package/xbox-controller-api/ || true
+          cp /usr/lib/gcc/x86_64-w64-mingw32/*/libgcc_s_seh-1.dll package/xbox-controller-api/ || true
+          cp /usr/lib/gcc/x86_64-w64-mingw32/*/libstdc++-6.dll package/xbox-controller-api/ || true
+        else
+          cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll package/xbox-controller-api/ || true
+          cp /usr/lib/gcc/i686-w64-mingw32/*/libgcc_s_dw2-1.dll package/xbox-controller-api/ || true
+          cp /usr/lib/gcc/i686-w64-mingw32/*/libstdc++-6.dll package/xbox-controller-api/ || true
+        fi
+        
+        # List all files for debugging
+        echo "Package contents:"
+        ls -la package/xbox-controller-api/
+        
+        # Create zip
         cd package
         zip -r ../xbox-controller-api-windows-${{ matrix.arch }}.zip xbox-controller-api
         
@@ -119,12 +146,12 @@ jobs:
         path: xbox-controller-api-windows-${{ matrix.arch }}.zip
         
     - name: Upload to release
-      if: github.event_name == 'release'
+      if: inputs.upload_url != ''
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ github.event.release.upload_url }}
+        upload_url: ${{ inputs.upload_url }}
         asset_path: xbox-controller-api-windows-${{ matrix.arch }}.zip
-        asset_name: xbox-controller-api-${{ github.event.release.tag_name }}-windows-${{ matrix.arch }}.zip
+        asset_name: xbox-controller-api-windows-${{ matrix.arch }}.zip
         asset_content_type: application/zip

@@ -1,4 +1,4 @@
-name: Release
+name: Create Release
 
 on:
   push:
@@ -8,8 +8,9 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - name: Checkout code
@@ -24,72 +25,59 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Xbox Controller API ${{ github.ref }}
         body: |
-          ## Features
-          - Cross-platform Xbox controller support
-          - Mouse and keyboard control
-          - Media playback control
-          - Voice input trigger (Win+H)
+          ## Xbox Controller Desktop Bridge ${{ github.ref_name }}
           
-          ## Downloads
-          - **Windows**: `xbox-controller-api-${{ github.ref_name }}-windows-x64.zip`
-          - **Linux**: `xbox-controller-api-${{ github.ref_name }}-linux-x64.tar.gz`
-          - **macOS**: `xbox-controller-api-${{ github.ref_name }}-macos-x64.tar.gz`
+          A cross-platform desktop application that allows you to control your computer using an Xbox controller.
           
-          ## Build Information
-          - SDL3 library required
-          - See BUILD.md for compilation instructions
+          ### Features
+          - 🎮 Full Xbox controller support
+          - 🖱️ Mouse control with analog sticks
+          - ⌨️ Keyboard shortcuts and text input
+          - 🎵 Media playback control
+          - 🎙️ Voice input activation
+          - ⚙️ Customizable button mappings
           
-          ## Changelog
-          See CHANGELOG.md for detailed changes.
+          ### Downloads
+          - **Windows x64**: `xbox-controller-api-windows-x64.zip`
+          - **Windows x86**: `xbox-controller-api-windows-x86.zip`
+          - **Linux x64**: `xbox-controller-api-linux-x64.tar.gz`
+          - **macOS x64**: `xbox-controller-api-macos-x64.tar.gz`
+          - **macOS ARM64**: `xbox-controller-api-macos-arm64.tar.gz`
+          
+          ### Installation
+          1. Download the appropriate package for your platform
+          2. Extract the archive
+          3. Run the executable
+          
+          ### Requirements
+          - Windows: Windows 10 or later
+          - Linux: X11 display server
+          - macOS: macOS 10.15 or later
+          
+          ### Changelog
+          - Initial release with core functionality
+          - Cross-platform support
+          - Configurable button mappings
         draft: false
         prerelease: false
 
-  build-all:
+  build-windows:
     needs: create-release
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Build and Upload Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        # Trigger windows.yml workflow
-        echo "Windows build triggered"
-        
-    - name: Build and Upload Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        # Trigger linux.yml workflow
-        echo "Linux build triggered"
-        
-    - name: Build and Upload macOS
-      if: matrix.os == 'macos-latest'
-      run: |
-        # Trigger macos.yml workflow
-        echo "macOS build triggered"
+    uses: ./.github/workflows/windows.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}
+    secrets: inherit
 
-  create-source-package:
+  build-linux:
     needs: create-release
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Create source package
-      run: |
-        ./scripts/package-source.sh ${{ github.ref_name }}
-        
-    - name: Upload source package
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: xbox-controller-api-${{ github.ref_name }}-source.tar.gz
-        asset_name: xbox-controller-api-${{ github.ref_name }}-source.tar.gz
-        asset_content_type: application/gzip
+    uses: ./.github/workflows/linux.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}
+    secrets: inherit
+
+  build-macos:
+    needs: create-release
+    uses: ./.github/workflows/macos.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}
+    secrets: inherit
