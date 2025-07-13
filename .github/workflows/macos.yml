@@ -26,7 +26,7 @@ jobs:
         
     - name: Build and install SDL3
       run: |
-        git clone https://github.com/libsdl-org/SDL.git -b SDL3 --depth 1
+        git clone https://github.com/libsdl-org/SDL.git --branch release-3.2.16 --depth 1
         cd SDL
         mkdir build && cd build
         cmake .. \
