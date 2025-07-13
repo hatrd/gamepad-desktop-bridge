@@ -4,7 +4,7 @@
 # Update using: vcpkg x-update-baseline
 {
   "default": {
-    "baseline": "2024.11.16",
+    "baseline": "da9c5c948de8abfed44086968aebb0c1e4154eca",
     "port-version": 0
   }
 }

@@ -13,7 +13,6 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        config: [Release, Debug]
         arch: [x64, arm64]
         
     steps:
@@ -40,7 +39,7 @@ jobs:
     - name: Configure CMake
       run: |
         cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }} \
           -GNinja
           
@@ -52,7 +51,6 @@ jobs:
       run: ctest --output-on-failure
       
     - name: Create app bundle
-      if: matrix.config == 'Release'
       run: |
         mkdir -p XboxControllerAPI.app/Contents/MacOS
         cp build/xbox_controller_api XboxControllerAPI.app/Contents/MacOS/
@@ -77,19 +75,17 @@ jobs:
         EOF
         
     - name: Package
-      if: matrix.config == 'Release'
       run: |
         tar -czf xbox-controller-api-macos-${{ matrix.arch }}.tar.gz XboxControllerAPI.app
         
     - name: Upload artifacts
-      if: matrix.config == 'Release'
       uses: actions/upload-artifact@v4
       with:
         name: xbox-controller-api-macos-${{ matrix.arch }}
         path: xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
         
     - name: Upload to release
-      if: github.event_name == 'release' && matrix.config == 'Release'
+      if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,10 +11,6 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config: [Release, Debug]
-        compiler: [gcc, clang]
         
     steps:
     - name: Checkout code
@@ -30,21 +26,14 @@ jobs:
           libx11-dev \
           libxtst-dev \
           libpulse-dev \
-          playerctl
+          playerctl \
+          gcc-11 \
+          g++-11
           
     - name: Setup GCC
-      if: matrix.compiler == 'gcc'
       run: |
-        sudo apt install -y gcc-11 g++-11
         echo "CC=gcc-11" >> $GITHUB_ENV
         echo "CXX=g++-11" >> $GITHUB_ENV
-        
-    - name: Setup Clang
-      if: matrix.compiler == 'clang'
-      run: |
-        sudo apt install -y clang-14
-        echo "CC=clang-14" >> $GITHUB_ENV
-        echo "CXX=clang++-14" >> $GITHUB_ENV
         
     - name: Build and install SDL3
       run: |
@@ -59,7 +48,7 @@ jobs:
     - name: Configure CMake
       run: |
         cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DCMAKE_BUILD_TYPE=Release \
           -GNinja
           
     - name: Build
@@ -70,19 +59,17 @@ jobs:
       run: ctest --output-on-failure
       
     - name: Package
-      if: matrix.config == 'Release' && matrix.compiler == 'gcc'
       run: |
         ninja -C build package
         
     - name: Upload artifacts
-      if: matrix.config == 'Release' && matrix.compiler == 'gcc'
       uses: actions/upload-artifact@v4
       with:
         name: xbox-controller-api-linux-x64
         path: build/*.tar.gz
         
     - name: Upload to release
-      if: github.event_name == 'release' && matrix.config == 'Release' && matrix.compiler == 'gcc'
+      if: github.event_name == 'release'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
