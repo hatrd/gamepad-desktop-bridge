@@ -6,6 +6,16 @@ on:
   pull_request:
     branches: [ main ]
   workflow_call:
+    inputs:
+      is_release:
+        description: 'Whether this is a release build'
+        required: false
+        type: boolean
+        default: false
+      tag_name:
+        description: 'Release tag name'
+        required: false
+        type: string
 
 jobs:
   build-macos:
@@ -90,8 +100,8 @@ jobs:
         path: xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
         
     - name: Upload to release
-      if: github.event_name == 'workflow_call' && startsWith(github.ref, 'refs/tags/')
+      if: inputs.is_release == true
       run: |
-        gh release upload ${{ github.ref_name }} xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
+        gh release upload ${{ inputs.tag_name }} xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

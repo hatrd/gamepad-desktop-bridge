@@ -58,14 +58,23 @@ jobs:
   build-windows:
     needs: create-release
     uses: ./.github/workflows/windows.yml
+    with:
+      is_release: true
+      tag_name: ${{ github.ref_name }}
     secrets: inherit
 
   build-linux:
     needs: create-release
     uses: ./.github/workflows/linux.yml
+    with:
+      is_release: true
+      tag_name: ${{ github.ref_name }}
     secrets: inherit
 
   build-macos:
     needs: create-release
     uses: ./.github/workflows/macos.yml
+    with:
+      is_release: true
+      tag_name: ${{ github.ref_name }}
     secrets: inherit
