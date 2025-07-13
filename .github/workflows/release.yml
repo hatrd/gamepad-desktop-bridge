@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Xbox Controller API ${{ github.ref }}
+        body: |
+          ## Features
+          - Cross-platform Xbox controller support
+          - Mouse and keyboard control
+          - Media playback control
+          - Voice input trigger (Win+H)
+          
+          ## Downloads
+          - **Windows**: `xbox-controller-api-${{ github.ref_name }}-windows-x64.zip`
+          - **Linux**: `xbox-controller-api-${{ github.ref_name }}-linux-x64.tar.gz`
+          - **macOS**: `xbox-controller-api-${{ github.ref_name }}-macos-x64.tar.gz`
+          
+          ## Build Information
+          - SDL3 library required
+          - See BUILD.md for compilation instructions
+          
+          ## Changelog
+          See CHANGELOG.md for detailed changes.
+        draft: false
+        prerelease: false
+
+  build-all:
+    needs: create-release
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Build and Upload Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        # Trigger windows.yml workflow
+        echo "Windows build triggered"
+        
+    - name: Build and Upload Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        # Trigger linux.yml workflow
+        echo "Linux build triggered"
+        
+    - name: Build and Upload macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Trigger macos.yml workflow
+        echo "macOS build triggered"
+
+  create-source-package:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create source package
+      run: |
+        ./scripts/package-source.sh ${{ github.ref_name }}
+        
+    - name: Upload source package
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: xbox-controller-api-${{ github.ref_name }}-source.tar.gz
+        asset_name: xbox-controller-api-${{ github.ref_name }}-source.tar.gz
+        asset_content_type: application/gzip

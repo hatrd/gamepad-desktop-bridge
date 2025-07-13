@@ -1,0 +1,69 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        config: [Release, Debug]
+        arch: [x64, x86]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: 'vcpkg.json'
+        
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: ${{ matrix.arch }}
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . `
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} `
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows `
+          -A ${{ matrix.arch == 'x64' && 'x64' || 'Win32' }}
+          
+    - name: Build
+      run: cmake --build build --config ${{ matrix.config }} --parallel
+      
+    - name: Test
+      working-directory: build
+      run: ctest --build-config ${{ matrix.config }} --output-on-failure
+      
+    - name: Package
+      if: matrix.config == 'Release'
+      run: |
+        cmake --build build --config Release --target package
+        
+    - name: Upload artifacts
+      if: matrix.config == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: xbox-controller-api-windows-${{ matrix.arch }}
+        path: build/*.zip
+        
+    - name: Upload to release
+      if: github.event_name == 'release' && matrix.config == 'Release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/xbox-controller-api-${{ github.event.release.tag_name }}-windows-${{ matrix.arch }}.zip
+        asset_name: xbox-controller-api-${{ github.event.release.tag_name }}-windows-${{ matrix.arch }}.zip
+        asset_content_type: application/zip

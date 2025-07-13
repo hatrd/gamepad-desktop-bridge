@@ -1,0 +1,93 @@
+name: Linux Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [Release, Debug]
+        compiler: [gcc, clang]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libx11-dev \
+          libxtst-dev \
+          libpulse-dev \
+          playerctl
+          
+    - name: Setup GCC
+      if: matrix.compiler == 'gcc'
+      run: |
+        sudo apt install -y gcc-11 g++-11
+        echo "CC=gcc-11" >> $GITHUB_ENV
+        echo "CXX=g++-11" >> $GITHUB_ENV
+        
+    - name: Setup Clang
+      if: matrix.compiler == 'clang'
+      run: |
+        sudo apt install -y clang-14
+        echo "CC=clang-14" >> $GITHUB_ENV
+        echo "CXX=clang++-14" >> $GITHUB_ENV
+        
+    - name: Build and install SDL3
+      run: |
+        git clone https://github.com/libsdl-org/SDL.git -b SDL3 --depth 1
+        cd SDL
+        mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
+        ninja
+        sudo ninja install
+        sudo ldconfig
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -GNinja
+          
+    - name: Build
+      run: ninja -C build
+      
+    - name: Test
+      working-directory: build
+      run: ctest --output-on-failure
+      
+    - name: Package
+      if: matrix.config == 'Release' && matrix.compiler == 'gcc'
+      run: |
+        ninja -C build package
+        
+    - name: Upload artifacts
+      if: matrix.config == 'Release' && matrix.compiler == 'gcc'
+      uses: actions/upload-artifact@v4
+      with:
+        name: xbox-controller-api-linux-x64
+        path: build/*.tar.gz
+        
+    - name: Upload to release
+      if: github.event_name == 'release' && matrix.config == 'Release' && matrix.compiler == 'gcc'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: build/xbox-controller-api-${{ github.event.release.tag_name }}-linux-x64.tar.gz
+        asset_name: xbox-controller-api-${{ github.event.release.tag_name }}-linux-x64.tar.gz
+        asset_content_type: application/gzip

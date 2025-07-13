@@ -1,0 +1,46 @@
+# Build logs
+build/
+build-*/
+out/
+bin/
+lib/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.vcxproj.user
+*.sln.docstates
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# vcpkg
+vcpkg_installed/
+
+# Platform specific
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+*.dSYM/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# Package files
+*.tar.gz
+*.zip
+*.7z
+
+# Logs
+*.log

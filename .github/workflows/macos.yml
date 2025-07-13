@@ -1,0 +1,100 @@
+name: macOS Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        config: [Release, Debug]
+        arch: [x64, arm64]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        brew update
+        brew install cmake ninja
+        
+    - name: Build and install SDL3
+      run: |
+        git clone https://github.com/libsdl-org/SDL.git -b SDL3 --depth 1
+        cd SDL
+        mkdir build && cd build
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }} \
+          -GNinja
+        ninja
+        sudo ninja install
+        
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }} \
+          -GNinja
+          
+    - name: Build
+      run: ninja -C build
+      
+    - name: Test
+      working-directory: build
+      run: ctest --output-on-failure
+      
+    - name: Create app bundle
+      if: matrix.config == 'Release'
+      run: |
+        mkdir -p XboxControllerAPI.app/Contents/MacOS
+        cp build/xbox_controller_api XboxControllerAPI.app/Contents/MacOS/
+        
+        cat > XboxControllerAPI.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>xbox_controller_api</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.example.xbox-controller-api</string>
+            <key>CFBundleName</key>
+            <string>Xbox Controller API</string>
+            <key>CFBundleVersion</key>
+            <string>${{ github.event.release.tag_name || '1.0.0' }}</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+        </dict>
+        </plist>
+        EOF
+        
+    - name: Package
+      if: matrix.config == 'Release'
+      run: |
+        tar -czf xbox-controller-api-macos-${{ matrix.arch }}.tar.gz XboxControllerAPI.app
+        
+    - name: Upload artifacts
+      if: matrix.config == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: xbox-controller-api-macos-${{ matrix.arch }}
+        path: xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
+        
+    - name: Upload to release
+      if: github.event_name == 'release' && matrix.config == 'Release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: xbox-controller-api-macos-${{ matrix.arch }}.tar.gz
+        asset_name: xbox-controller-api-${{ github.event.release.tag_name }}-macos-${{ matrix.arch }}.tar.gz
+        asset_content_type: application/gzip
