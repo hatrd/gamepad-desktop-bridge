@@ -27,7 +27,7 @@ private:
     bool is_initialized_;
     
 #ifdef _WIN32
-    void sendMediaKey(DWORD key);
+    void sendMediaKey(unsigned long key);
 #elif __linux__
     void sendMediaCommand(const char* command);
 #elif __APPLE__

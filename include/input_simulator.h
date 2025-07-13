@@ -25,6 +25,12 @@ public:
     void middleClick();
     void scroll(int delta);
     
+    // Mouse button press/release
+    void leftMouseDown();
+    void leftMouseUp();
+    void rightMouseDown();
+    void rightMouseUp();
+    
     // Keyboard control
     void pressKey(int key_code);
     void releaseKey(int key_code);
@@ -33,6 +39,12 @@ public:
     
     // System shortcuts
     void triggerVoiceInput();
+    void altTab();  // Alt+Tab task switcher
+    void winTab();  // Win+Tab task view
+    void escape();  // Escape key
+    void enter();   // Enter key
+    void winKey();  // Windows key
+    void screenshot(); // Win+Shift+S
     void mediaPlayPause();
     void mediaNext();
     void mediaPrevious();

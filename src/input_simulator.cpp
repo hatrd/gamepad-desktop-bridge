@@ -23,13 +23,13 @@ bool InputSimulator::initialize() {
 #elif __linux__
     display_ = XOpenDisplay(nullptr);
     if (!display_) {
-        std::cerr << "无法打开X11显示" << std::endl;
+        std::cerr << "Cannot open X11 display" << std::endl;
         return false;
     }
     
     int event_base, error_base, major, minor;
     if (!XTestQueryExtension(display_, &event_base, &error_base, &major, &minor)) {
-        std::cerr << "XTest扩展不可用" << std::endl;
+        std::cerr << "XTest extension not available" << std::endl;
         XCloseDisplay(display_);
         display_ = nullptr;
         return false;
@@ -83,8 +83,8 @@ void InputSimulator::setMousePosition(int x, int y) {
 
 void InputSimulator::leftClick() {
 #ifdef _WIN32
-    simulateMouseClick(MOUSEEVENTF_LEFTDOWN, true);
-    simulateMouseClick(MOUSEEVENTF_LEFTUP, false);
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 #elif __linux__
     simulateMouseClick(Button1, true);
     simulateMouseClick(Button1, false);
@@ -94,10 +94,30 @@ void InputSimulator::leftClick() {
 #endif
 }
 
+void InputSimulator::leftMouseDown() {
+#ifdef _WIN32
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+#elif __linux__
+    simulateMouseClick(Button1, true);
+#elif __APPLE__
+    simulateMouseClick(kCGMouseButtonLeft, true);
+#endif
+}
+
+void InputSimulator::leftMouseUp() {
+#ifdef _WIN32
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+#elif __linux__
+    simulateMouseClick(Button1, false);
+#elif __APPLE__
+    simulateMouseClick(kCGMouseButtonLeft, false);
+#endif
+}
+
 void InputSimulator::rightClick() {
 #ifdef _WIN32
-    simulateMouseClick(MOUSEEVENTF_RIGHTDOWN, true);
-    simulateMouseClick(MOUSEEVENTF_RIGHTUP, false);
+    mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+    mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
 #elif __linux__
     simulateMouseClick(Button3, true);
     simulateMouseClick(Button3, false);
@@ -107,10 +127,30 @@ void InputSimulator::rightClick() {
 #endif
 }
 
+void InputSimulator::rightMouseDown() {
+#ifdef _WIN32
+    mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+#elif __linux__
+    simulateMouseClick(Button3, true);
+#elif __APPLE__
+    simulateMouseClick(kCGMouseButtonRight, true);
+#endif
+}
+
+void InputSimulator::rightMouseUp() {
+#ifdef _WIN32
+    mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+#elif __linux__
+    simulateMouseClick(Button3, false);
+#elif __APPLE__
+    simulateMouseClick(kCGMouseButtonRight, false);
+#endif
+}
+
 void InputSimulator::middleClick() {
 #ifdef _WIN32
-    simulateMouseClick(MOUSEEVENTF_MIDDLEDOWN, true);
-    simulateMouseClick(MOUSEEVENTF_MIDDLEUP, false);
+    mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);
+    mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 0);
 #elif __linux__
     simulateMouseClick(Button2, true);
     simulateMouseClick(Button2, false);
@@ -200,10 +240,191 @@ void InputSimulator::triggerVoiceInput() {
     keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
     // Linux implementation would depend on the desktop environment
-    std::cout << "语音输入触发 (Linux暂未实现)" << std::endl;
+    std::cout << "Voice input triggered (Linux not implemented yet)" << std::endl;
 #elif __APPLE__
     // macOS voice input trigger
-    std::cout << "语音输入触发 (macOS暂未实现)" << std::endl;
+    std::cout << "Voice input triggered (macOS not implemented yet)" << std::endl;
+#endif
+}
+
+void InputSimulator::altTab() {
+#ifdef _WIN32
+    // Alt + Tab
+    keybd_event(VK_MENU, 0, 0, 0);  // Alt down
+    keybd_event(VK_TAB, 0, 0, 0);   // Tab down
+    keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0);  // Tab up
+    keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0); // Alt up
+#elif __linux__
+    if (display_) {
+        KeyCode alt = XKeysymToKeycode(display_, XK_Alt_L);
+        KeyCode tab = XKeysymToKeycode(display_, XK_Tab);
+        
+        XTestFakeKeyEvent(display_, alt, True, CurrentTime);
+        XTestFakeKeyEvent(display_, tab, True, CurrentTime);
+        XTestFakeKeyEvent(display_, tab, False, CurrentTime);
+        XTestFakeKeyEvent(display_, alt, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Cmd+Tab
+    CGEventRef cmd_down = CGEventCreateKeyboardEvent(NULL, kVK_Command, true);
+    CGEventRef tab_down = CGEventCreateKeyboardEvent(NULL, kVK_Tab, true);
+    CGEventRef tab_up = CGEventCreateKeyboardEvent(NULL, kVK_Tab, false);
+    CGEventRef cmd_up = CGEventCreateKeyboardEvent(NULL, kVK_Command, false);
+    
+    CGEventPost(kCGHIDEventTap, cmd_down);
+    CGEventPost(kCGHIDEventTap, tab_down);
+    CGEventPost(kCGHIDEventTap, tab_up);
+    CGEventPost(kCGHIDEventTap, cmd_up);
+    
+    CFRelease(cmd_down);
+    CFRelease(tab_down);
+    CFRelease(tab_up);
+    CFRelease(cmd_up);
+#endif
+}
+
+void InputSimulator::winTab() {
+#ifdef _WIN32
+    // Win + Tab (Task View)
+    keybd_event(VK_LWIN, 0, 0, 0);  // Win down
+    keybd_event(VK_TAB, 0, 0, 0);   // Tab down
+    keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0);  // Tab up
+    keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0); // Win up
+#elif __linux__
+    // Linux: Super+Tab or similar depending on desktop environment
+    if (display_) {
+        KeyCode super = XKeysymToKeycode(display_, XK_Super_L);
+        KeyCode tab = XKeysymToKeycode(display_, XK_Tab);
+        
+        XTestFakeKeyEvent(display_, super, True, CurrentTime);
+        XTestFakeKeyEvent(display_, tab, True, CurrentTime);
+        XTestFakeKeyEvent(display_, tab, False, CurrentTime);
+        XTestFakeKeyEvent(display_, super, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Mission Control (Ctrl+Up)
+    CGEventRef ctrl_down = CGEventCreateKeyboardEvent(NULL, kVK_Control, true);
+    CGEventRef up_down = CGEventCreateKeyboardEvent(NULL, kVK_UpArrow, true);
+    CGEventRef up_up = CGEventCreateKeyboardEvent(NULL, kVK_UpArrow, false);
+    CGEventRef ctrl_up = CGEventCreateKeyboardEvent(NULL, kVK_Control, false);
+    
+    CGEventPost(kCGHIDEventTap, ctrl_down);
+    CGEventPost(kCGHIDEventTap, up_down);
+    CGEventPost(kCGHIDEventTap, up_up);
+    CGEventPost(kCGHIDEventTap, ctrl_up);
+    
+    CFRelease(ctrl_down);
+    CFRelease(up_down);
+    CFRelease(up_up);
+    CFRelease(ctrl_up);
+#endif
+}
+
+void InputSimulator::escape() {
+#ifdef _WIN32
+    keybd_event(VK_ESCAPE, 0, 0, 0);
+    keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+#elif __linux__
+    if (display_) {
+        KeyCode esc = XKeysymToKeycode(display_, XK_Escape);
+        XTestFakeKeyEvent(display_, esc, True, CurrentTime);
+        XTestFakeKeyEvent(display_, esc, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    CGEventRef esc_down = CGEventCreateKeyboardEvent(NULL, kVK_Escape, true);
+    CGEventRef esc_up = CGEventCreateKeyboardEvent(NULL, kVK_Escape, false);
+    CGEventPost(kCGHIDEventTap, esc_down);
+    CGEventPost(kCGHIDEventTap, esc_up);
+    CFRelease(esc_down);
+    CFRelease(esc_up);
+#endif
+}
+
+void InputSimulator::enter() {
+#ifdef _WIN32
+    keybd_event(VK_RETURN, 0, 0, 0);
+    keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+#elif __linux__
+    if (display_) {
+        KeyCode enter = XKeysymToKeycode(display_, XK_Return);
+        XTestFakeKeyEvent(display_, enter, True, CurrentTime);
+        XTestFakeKeyEvent(display_, enter, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    CGEventRef enter_down = CGEventCreateKeyboardEvent(NULL, kVK_Return, true);
+    CGEventRef enter_up = CGEventCreateKeyboardEvent(NULL, kVK_Return, false);
+    CGEventPost(kCGHIDEventTap, enter_down);
+    CGEventPost(kCGHIDEventTap, enter_up);
+    CFRelease(enter_down);
+    CFRelease(enter_up);
+#endif
+}
+
+void InputSimulator::winKey() {
+#ifdef _WIN32
+    keybd_event(VK_LWIN, 0, 0, 0);
+    keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
+#elif __linux__
+    if (display_) {
+        KeyCode super = XKeysymToKeycode(display_, XK_Super_L);
+        XTestFakeKeyEvent(display_, super, True, CurrentTime);
+        XTestFakeKeyEvent(display_, super, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Cmd key
+    CGEventRef cmd_down = CGEventCreateKeyboardEvent(NULL, kVK_Command, true);
+    CGEventRef cmd_up = CGEventCreateKeyboardEvent(NULL, kVK_Command, false);
+    CGEventPost(kCGHIDEventTap, cmd_down);
+    CGEventPost(kCGHIDEventTap, cmd_up);
+    CFRelease(cmd_down);
+    CFRelease(cmd_up);
+#endif
+}
+
+void InputSimulator::screenshot() {
+#ifdef _WIN32
+    // Win + Shift + S
+    keybd_event(VK_LWIN, 0, 0, 0);
+    keybd_event(VK_LSHIFT, 0, 0, 0);
+    keybd_event('S', 0, 0, 0);
+    keybd_event('S', 0, KEYEVENTF_KEYUP, 0);
+    keybd_event(VK_LSHIFT, 0, KEYEVENTF_KEYUP, 0);
+    keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
+#elif __linux__
+    // Linux: depends on desktop environment, common is Print Screen
+    if (display_) {
+        KeyCode print = XKeysymToKeycode(display_, XK_Print);
+        XTestFakeKeyEvent(display_, print, True, CurrentTime);
+        XTestFakeKeyEvent(display_, print, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Cmd+Shift+4 (area screenshot)
+    CGEventRef cmd_down = CGEventCreateKeyboardEvent(NULL, kVK_Command, true);
+    CGEventRef shift_down = CGEventCreateKeyboardEvent(NULL, kVK_Shift, true);
+    CGEventRef four_down = CGEventCreateKeyboardEvent(NULL, kVK_ANSI_4, true);
+    CGEventRef four_up = CGEventCreateKeyboardEvent(NULL, kVK_ANSI_4, false);
+    CGEventRef shift_up = CGEventCreateKeyboardEvent(NULL, kVK_Shift, false);
+    CGEventRef cmd_up = CGEventCreateKeyboardEvent(NULL, kVK_Command, false);
+    
+    CGEventPost(kCGHIDEventTap, cmd_down);
+    CGEventPost(kCGHIDEventTap, shift_down);
+    CGEventPost(kCGHIDEventTap, four_down);
+    CGEventPost(kCGHIDEventTap, four_up);
+    CGEventPost(kCGHIDEventTap, shift_up);
+    CGEventPost(kCGHIDEventTap, cmd_up);
+    
+    CFRelease(cmd_down);
+    CFRelease(shift_down);
+    CFRelease(four_down);
+    CFRelease(four_up);
+    CFRelease(shift_up);
+    CFRelease(cmd_up);
 #endif
 }
 
@@ -281,8 +502,11 @@ void InputSimulator::simulateKeyPress(WORD key, bool key_down) {
 }
 
 void InputSimulator::simulateMouseClick(DWORD button, bool button_down) {
-    DWORD flags = button_down ? button : (button << 1);
-    mouse_event(flags, 0, 0, 0, 0);
+    // Windows mouse_event uses separate flags for down and up
+    // MOUSEEVENTF_LEFTDOWN = 0x0002, MOUSEEVENTF_LEFTUP = 0x0004
+    // MOUSEEVENTF_RIGHTDOWN = 0x0008, MOUSEEVENTF_RIGHTUP = 0x0010
+    // MOUSEEVENTF_MIDDLEDOWN = 0x0020, MOUSEEVENTF_MIDDLEUP = 0x0040
+    mouse_event(button, 0, 0, 0, 0);
 }
 #elif __linux__
 void InputSimulator::simulateKeyPress(KeyCode key, bool key_down) {

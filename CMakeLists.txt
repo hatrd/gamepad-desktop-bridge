@@ -18,12 +18,14 @@ set(SOURCES
     src/gamepad_controller.cpp
     src/input_simulator.cpp
     src/media_controller.cpp
+    src/config_manager.cpp
 )
 
 set(HEADERS
     include/gamepad_controller.h
     include/input_simulator.h
     include/media_controller.h
+    include/config_manager.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

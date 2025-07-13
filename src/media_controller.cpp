@@ -18,7 +18,7 @@ MediaController::~MediaController() {
 
 bool MediaController::initialize() {
     is_initialized_ = true;
-    std::cout << "媒体控制器初始化成功" << std::endl;
+    std::cout << "Media controller initialized successfully" << std::endl;
     return true;
 }
 
@@ -122,14 +122,14 @@ int MediaController::getVolume() const {
 
 // Private helper methods
 #ifdef _WIN32
-void MediaController::sendMediaKey(DWORD key) {
+void MediaController::sendMediaKey(unsigned long key) {
     keybd_event(key, 0, 0, 0);
     keybd_event(key, 0, KEYEVENTF_KEYUP, 0);
 }
 #elif __linux__
 void MediaController::sendMediaCommand(const char* command) {
     if (system(command) != 0) {
-        std::cerr << "媒体命令执行失败: " << command << std::endl;
+        std::cerr << "Media command execution failed: " << command << std::endl;
     }
 }
 #elif __APPLE__
@@ -137,7 +137,7 @@ void MediaController::sendAppleScriptCommand(const char* script) {
     char command[512];
     snprintf(command, sizeof(command), "osascript -e '%s'", script);
     if (system(command) != 0) {
-        std::cerr << "AppleScript命令执行失败: " << script << std::endl;
+        std::cerr << "AppleScript command execution failed: " << script << std::endl;
     }
 }
 #endif
