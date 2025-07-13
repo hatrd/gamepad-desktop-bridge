@@ -138,32 +138,32 @@ jobs:
         
         # Create a README with setup instructions
         cat > package/xbox-controller-api/README.txt << 'EOF'
-Xbox Controller Desktop Bridge
+        Xbox Controller Desktop Bridge
 
-REQUIREMENTS:
-- Windows 10 or later
-- Xbox controller (wired or wireless)
-- Visual C++ Redistributable (if issues occur)
+        REQUIREMENTS:
+        - Windows 10 or later
+        - Xbox controller (wired or wireless)
+        - Visual C++ Redistributable (if issues occur)
 
-SETUP:
-1. Connect your Xbox controller
-2. Run xbox_controller_api.exe
-3. Follow the on-screen instructions
+        SETUP:
+        1. Connect your Xbox controller
+        2. Run xbox_controller_api.exe
+        3. Follow the on-screen instructions
 
-TROUBLESHOOTING:
-- If the program crashes, install Visual C++ Redistributable
-- Make sure all DLL files are in the same folder as the executable
-- Check Windows Event Viewer for detailed error messages
+        TROUBLESHOOTING:
+        - If the program crashes, install Visual C++ Redistributable
+        - Make sure all DLL files are in the same folder as the executable
+        - Check Windows Event Viewer for detailed error messages
 
-CONTROLS:
-- Left stick: Mouse movement
-- Right stick: Scroll wheel
-- A button: Left mouse click
-- B button: Right mouse click
-- X button: Play/Pause media
-- Y button: Voice input (Win+H)
-- Start button: Exit program
-EOF
+        CONTROLS:
+        - Left stick: Mouse movement
+        - Right stick: Scroll wheel
+        - A button: Left mouse click
+        - B button: Right mouse click
+        - X button: Play/Pause media
+        - Y button: Voice input (Win+H)
+        - Start button: Exit program
+        EOF
         
         # List all files for debugging
         echo "Package contents:"
