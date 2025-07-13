@@ -4,9 +4,11 @@
 #include <windows.h>
 #elif __linux__
 #include <X11/Xlib.h>
+#include <X11/keysym.h>
 #include <X11/extensions/XTest.h>
 #elif __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
 #endif
 
 class InputSimulator {

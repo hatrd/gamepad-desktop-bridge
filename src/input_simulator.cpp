@@ -59,7 +59,7 @@ void InputSimulator::moveMouse(int delta_x, int delta_y) {
     SetCursorPos(cursor.x + delta_x, cursor.y + delta_y);
 #elif __linux__
     if (display_) {
-        XTestRelativeMotionPtr(display_, delta_x, delta_y);
+        XTestFakeRelativeMotionEvent(display_, delta_x, delta_y, CurrentTime);
         XFlush(display_);
     }
 #elif __APPLE__
@@ -433,9 +433,9 @@ void InputSimulator::mediaPlayPause() {
     keybd_event(VK_MEDIA_PLAY_PAUSE, 0, 0, 0);
     keybd_event(VK_MEDIA_PLAY_PAUSE, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("playerctl play-pause");
+    (void)system("playerctl play-pause");
 #elif __APPLE__
-    system("osascript -e 'tell application \"Music\" to playpause'");
+    (void)system("osascript -e 'tell application \"Music\" to playpause'");
 #endif
 }
 
@@ -444,9 +444,9 @@ void InputSimulator::mediaNext() {
     keybd_event(VK_MEDIA_NEXT_TRACK, 0, 0, 0);
     keybd_event(VK_MEDIA_NEXT_TRACK, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("playerctl next");
+    (void)system("playerctl next");
 #elif __APPLE__
-    system("osascript -e 'tell application \"Music\" to next track'");
+    (void)system("osascript -e 'tell application \"Music\" to next track'");
 #endif
 }
 
@@ -455,9 +455,9 @@ void InputSimulator::mediaPrevious() {
     keybd_event(VK_MEDIA_PREV_TRACK, 0, 0, 0);
     keybd_event(VK_MEDIA_PREV_TRACK, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("playerctl previous");
+    (void)system("playerctl previous");
 #elif __APPLE__
-    system("osascript -e 'tell application \"Music\" to previous track'");
+    (void)system("osascript -e 'tell application \"Music\" to previous track'");
 #endif
 }
 
@@ -468,7 +468,7 @@ void InputSimulator::volumeUp() {
 #elif __linux__
     (void)system("pactl set-sink-volume @DEFAULT_SINK@ +5%");
 #elif __APPLE__
-    system("osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'");
+    (void)system("osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'");
 #endif
 }
 
@@ -479,7 +479,7 @@ void InputSimulator::volumeDown() {
 #elif __linux__
     (void)system("pactl set-sink-volume @DEFAULT_SINK@ -5%");
 #elif __APPLE__
-    system("osascript -e 'set volume output volume (output volume of (get volume settings) - 10)'");
+    (void)system("osascript -e 'set volume output volume (output volume of (get volume settings) - 10)'");
 #endif
 }
 
@@ -490,7 +490,7 @@ void InputSimulator::volumeMute() {
 #elif __linux__
     (void)system("pactl set-sink-mute @DEFAULT_SINK@ toggle");
 #elif __APPLE__
-    system("osascript -e 'set volume with output muted'");
+    (void)system("osascript -e 'set volume with output muted'");
 #endif
 }
 
