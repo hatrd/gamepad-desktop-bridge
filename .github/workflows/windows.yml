@@ -24,20 +24,24 @@ jobs:
       with:
         arch: ${{ matrix.arch }}
         
-    - name: Build and install SDL3
+    - name: Download and install SDL3
       run: |
-        git clone https://github.com/libsdl-org/SDL.git --branch release-3.2.16 --depth 1
-        cd SDL
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -A ${{ matrix.arch == 'x64' && 'x64' || 'Win32' }}
-        cmake --build . --config Release
-        cmake --install . --config Release
+        $arch = "${{ matrix.arch }}"
+        if ($arch -eq "x64") {
+          $url = "https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16-VC.zip"
+        } else {
+          $url = "https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16-VC.zip"
+        }
+        
+        Invoke-WebRequest -Uri $url -OutFile SDL3.zip
+        Expand-Archive -Path SDL3.zip -DestinationPath .
+        Move-Item SDL3-3.2.16 SDL3
         
     - name: Configure CMake
       run: |
         cmake -B build -S . `
           -DCMAKE_BUILD_TYPE=Release `
+          -DSDL3_DIR="${{ github.workspace }}/SDL3/cmake" `
           -A ${{ matrix.arch == 'x64' && 'x64' || 'Win32' }}
           
     - name: Build

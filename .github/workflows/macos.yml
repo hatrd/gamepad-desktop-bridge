@@ -24,10 +24,16 @@ jobs:
         brew update
         brew install cmake ninja
         
-    - name: Build and install SDL3
+    - name: Download and install SDL3
       run: |
-        git clone https://github.com/libsdl-org/SDL.git --branch release-3.2.16 --depth 1
-        cd SDL
+        arch="${{ matrix.arch }}"
+        if [ "$arch" = "arm64" ]; then
+          wget https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16.tar.gz
+        else
+          wget https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16.tar.gz
+        fi
+        tar -xzf SDL3-3.2.16.tar.gz
+        cd SDL3-3.2.16
         mkdir build && cd build
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \

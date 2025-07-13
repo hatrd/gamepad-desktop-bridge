@@ -466,7 +466,7 @@ void InputSimulator::volumeUp() {
     keybd_event(VK_VOLUME_UP, 0, 0, 0);
     keybd_event(VK_VOLUME_UP, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("pactl set-sink-volume @DEFAULT_SINK@ +5%");
+    (void)system("pactl set-sink-volume @DEFAULT_SINK@ +5%");
 #elif __APPLE__
     system("osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'");
 #endif
@@ -477,7 +477,7 @@ void InputSimulator::volumeDown() {
     keybd_event(VK_VOLUME_DOWN, 0, 0, 0);
     keybd_event(VK_VOLUME_DOWN, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("pactl set-sink-volume @DEFAULT_SINK@ -5%");
+    (void)system("pactl set-sink-volume @DEFAULT_SINK@ -5%");
 #elif __APPLE__
     system("osascript -e 'set volume output volume (output volume of (get volume settings) - 10)'");
 #endif
@@ -488,7 +488,7 @@ void InputSimulator::volumeMute() {
     keybd_event(VK_VOLUME_MUTE, 0, 0, 0);
     keybd_event(VK_VOLUME_MUTE, 0, KEYEVENTF_KEYUP, 0);
 #elif __linux__
-    system("pactl set-sink-mute @DEFAULT_SINK@ toggle");
+    (void)system("pactl set-sink-mute @DEFAULT_SINK@ toggle");
 #elif __APPLE__
     system("osascript -e 'set volume with output muted'");
 #endif
