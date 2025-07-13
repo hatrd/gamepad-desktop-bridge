@@ -43,3 +43,32 @@ elseif(APPLE)
     find_library(COREGRAPHICS_LIBRARY CoreGraphics)
     target_link_libraries(${PROJECT_NAME} ${CARBON_LIBRARY} ${COREGRAPHICS_LIBRARY})
 endif()
+
+# Install configuration (only for Linux and macOS)
+if(UNIX)
+    install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+        COMPONENT Runtime)
+
+    # CPack configuration for packaging
+    set(CPACK_PACKAGE_NAME "xbox-controller-api")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Xbox Controller Desktop Bridge")
+    set(CPACK_PACKAGE_VENDOR "Xbox Controller API")
+    set(CPACK_GENERATOR "TGZ")
+
+    if(APPLE)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+            set(CPACK_PACKAGE_FILE_NAME "xbox-controller-api-macos-arm64")
+        else()
+            set(CPACK_PACKAGE_FILE_NAME "xbox-controller-api-macos-x64")
+        endif()
+    else()
+        # Linux
+        set(CPACK_PACKAGE_FILE_NAME "xbox-controller-api-linux-x64")
+    endif()
+
+    include(CPack)
+endif()

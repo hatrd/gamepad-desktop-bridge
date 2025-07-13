@@ -286,19 +286,37 @@ private:
 };
 
 int main() {
-    GamepadAPI api;
-    
-    if (!api.initialize()) {
-        std::cerr << "Initialization failed!" << std::endl;
+    try {
+        std::cout << "Starting Xbox Controller API..." << std::endl;
+        std::cout << "Checking system compatibility..." << std::endl;
+        
+        GamepadAPI api;
+        
+        std::cout << "Initializing components..." << std::endl;
+        if (!api.initialize()) {
+            std::cerr << "Initialization failed!" << std::endl;
+            std::cout << "Press any key to exit..." << std::endl;
+            std::cin.get();
+            return -1;
+        }
+        
+        std::cout << "Starting main loop..." << std::endl;
+        api.run();
+        
+        std::cout << "Shutting down..." << std::endl;
+        api.shutdown();
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Runtime error: " << e.what() << std::endl;
+        std::cout << "Press any key to exit..." << std::endl;
+        std::cin.get();
+        return -1;
+    } catch (...) {
+        std::cerr << "Unknown error occurred!" << std::endl;
+        std::cout << "Press any key to exit..." << std::endl;
+        std::cin.get();
         return -1;
     }
     
-    try {
-        api.run();
-    } catch (const std::exception& e) {
-        std::cerr << "Runtime error: " << e.what() << std::endl;
-    }
-    
-    api.shutdown();
     return 0;
 }

@@ -115,16 +115,55 @@ jobs:
         # Copy SDL3 DLLs
         cp ${{ github.workspace }}/SDL3-install/bin/*.dll package/xbox-controller-api/ || true
         
-        # Copy MinGW runtime DLLs
+        # Copy MinGW runtime DLLs with better error handling
         if [ "${{ matrix.arch }}" = "x64" ]; then
-          cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll package/xbox-controller-api/ || true
-          cp /usr/lib/gcc/x86_64-w64-mingw32/*/libgcc_s_seh-1.dll package/xbox-controller-api/ || true
-          cp /usr/lib/gcc/x86_64-w64-mingw32/*/libstdc++-6.dll package/xbox-controller-api/ || true
+          # Essential MinGW x64 runtime DLLs
+          find /usr/x86_64-w64-mingw32/lib -name "libwinpthread-1.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libwinpthread-1.dll not found"
+          find /usr/lib/gcc/x86_64-w64-mingw32 -name "libgcc_s_seh-1.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libgcc_s_seh-1.dll not found"
+          find /usr/lib/gcc/x86_64-w64-mingw32 -name "libstdc++-6.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libstdc++-6.dll not found"
+          
+          # Additional potential dependencies
+          find /usr/x86_64-w64-mingw32/lib -name "libssp-0.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libssp-0.dll not found"
+          find /usr/lib/gcc/x86_64-w64-mingw32 -name "libquadmath-0.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libquadmath-0.dll not found"
         else
-          cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll package/xbox-controller-api/ || true
-          cp /usr/lib/gcc/i686-w64-mingw32/*/libgcc_s_dw2-1.dll package/xbox-controller-api/ || true
-          cp /usr/lib/gcc/i686-w64-mingw32/*/libstdc++-6.dll package/xbox-controller-api/ || true
+          # Essential MinGW x86 runtime DLLs
+          find /usr/i686-w64-mingw32/lib -name "libwinpthread-1.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libwinpthread-1.dll not found"
+          find /usr/lib/gcc/i686-w64-mingw32 -name "libgcc_s_dw2-1.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libgcc_s_dw2-1.dll not found"
+          find /usr/lib/gcc/i686-w64-mingw32 -name "libstdc++-6.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libstdc++-6.dll not found"
+          
+          # Additional potential dependencies
+          find /usr/i686-w64-mingw32/lib -name "libssp-0.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libssp-0.dll not found"
+          find /usr/lib/gcc/i686-w64-mingw32 -name "libquadmath-0.dll" -exec cp {} package/xbox-controller-api/ \; || echo "libquadmath-0.dll not found"
         fi
+        
+        # Create a README with setup instructions
+        cat > package/xbox-controller-api/README.txt << 'EOF'
+Xbox Controller Desktop Bridge
+
+REQUIREMENTS:
+- Windows 10 or later
+- Xbox controller (wired or wireless)
+- Visual C++ Redistributable (if issues occur)
+
+SETUP:
+1. Connect your Xbox controller
+2. Run xbox_controller_api.exe
+3. Follow the on-screen instructions
+
+TROUBLESHOOTING:
+- If the program crashes, install Visual C++ Redistributable
+- Make sure all DLL files are in the same folder as the executable
+- Check Windows Event Viewer for detailed error messages
+
+CONTROLS:
+- Left stick: Mouse movement
+- Right stick: Scroll wheel
+- A button: Left mouse click
+- B button: Right mouse click
+- X button: Play/Pause media
+- Y button: Voice input (Win+H)
+- Start button: Exit program
+EOF
         
         # List all files for debugging
         echo "Package contents:"
