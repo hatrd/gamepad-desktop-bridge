@@ -53,6 +53,8 @@ public:
     void volumeUp();
     void volumeDown();
     void volumeMute();
+    void browserBack();    // Alt+Left
+    void browserForward(); // Alt+Right
     
 private:
 #ifdef _WIN32

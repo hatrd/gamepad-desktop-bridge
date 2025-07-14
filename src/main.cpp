@@ -42,6 +42,7 @@ public:
         // Load sensitivity settings from config
         mouse_sensitivity_ = config_.getMouseSensitivity();
         scroll_sensitivity_ = config_.getScrollSensitivity();
+        invert_scroll_y_ = config_.getInvertScroll();
         
         if (!gamepad_.initialize()) {
             std::cerr << "Failed to initialize gamepad controller" << std::endl;
@@ -68,22 +69,24 @@ public:
         std::cout << "Xbox Controller API started successfully!" << std::endl;
         std::cout << "Controls:" << std::endl;
         std::cout << "- Left stick: Mouse movement" << std::endl;
-        std::cout << "- Right stick: Scroll wheel (Y-axis)" << std::endl;
-        std::cout << "- A button: Left mouse click" << std::endl;
-        std::cout << "- B button: Right mouse click" << std::endl;
-        std::cout << "- X button: Play/Pause media" << std::endl;
-        std::cout << "- Y button: Voice input (Win+H)" << std::endl;
-        std::cout << "- Left Shoulder: Win+Tab (Task View)" << std::endl;
-        std::cout << "- Right Shoulder: Enter key" << std::endl;
-        std::cout << "- Back button: Escape key" << std::endl;
-        std::cout << "- Guide button: Windows key" << std::endl;
-        std::cout << "- Left stick click: Middle mouse click" << std::endl;
-        std::cout << "- Right stick click: Screenshot (Win+Shift+S)" << std::endl;
-        std::cout << "- Left Trigger: Previous track" << std::endl;
-        std::cout << "- Right Trigger: Next track" << std::endl;
-        std::cout << "- Start button: Exit program" << std::endl;
-        std::cout << "- D-pad Up/Down: Adjust mouse sensitivity" << std::endl;
-        std::cout << "- D-pad Left/Right: Adjust scroll sensitivity" << std::endl;
+        std::cout << "- Right stick: Scroll wheel (Y-axis, " << (invert_scroll_y_ ? "inverted" : "normal") << ")" << std::endl;
+        std::cout << "- A button: " << config_.getButtonAction("button_a") << std::endl;
+        std::cout << "- B button: " << config_.getButtonAction("button_b") << std::endl;
+        std::cout << "- X button: " << config_.getButtonAction("button_x") << std::endl;
+        std::cout << "- Y button: " << config_.getButtonAction("button_y") << std::endl;
+        std::cout << "- Left Shoulder: " << config_.getButtonAction("left_shoulder") << std::endl;
+        std::cout << "- Right Shoulder: " << config_.getButtonAction("right_shoulder") << std::endl;
+        std::cout << "- Back button: " << config_.getButtonAction("button_back") << std::endl;
+        std::cout << "- Guide button: " << config_.getButtonAction("button_guide") << std::endl;
+        std::cout << "- Left stick click: " << config_.getButtonAction("left_stick_button") << std::endl;
+        std::cout << "- Right stick click: " << config_.getButtonAction("right_stick_button") << std::endl;
+        std::cout << "- Left Trigger: " << config_.getButtonAction("left_trigger") << std::endl;
+        std::cout << "- Right Trigger: " << config_.getButtonAction("right_trigger") << std::endl;
+        std::cout << "- Start button: " << config_.getButtonAction("button_start") << std::endl;
+        std::cout << "- D-pad Up: " << config_.getButtonAction("dpad_up") << std::endl;
+        std::cout << "- D-pad Down: " << config_.getButtonAction("dpad_down") << std::endl;
+        std::cout << "- D-pad Left: " << config_.getButtonAction("dpad_left") << std::endl;
+        std::cout << "- D-pad Right: " << config_.getButtonAction("dpad_right") << std::endl;
         std::cout << "-------------------------------" << std::endl;
         
         while (running_) {
@@ -141,115 +144,192 @@ private:
         // Remove callback-based approach, use state polling instead
     }
     
+    void handleButtonAction(const std::string& action) {
+        if (action.empty()) return;
+        
+        if (action == "left_click") {
+            if (!left_mouse_held_) {
+                input_sim_.leftMouseDown();
+                left_mouse_held_ = true;
+                std::cout << "Left mouse down" << std::endl;
+            }
+        } else if (action == "right_click") {
+            if (!right_mouse_held_) {
+                input_sim_.rightMouseDown();
+                right_mouse_held_ = true;
+                std::cout << "Right mouse down" << std::endl;
+            }
+        } else if (action == "middle_click") {
+            input_sim_.middleClick();
+            std::cout << "Middle click" << std::endl;
+        } else if (action == "media_play_pause") {
+            media_ctrl_.playPause();
+            std::cout << "Play/Pause" << std::endl;
+        } else if (action == "media_next") {
+            media_ctrl_.next();
+            std::cout << "Next track" << std::endl;
+        } else if (action == "media_previous") {
+            media_ctrl_.previous();
+            std::cout << "Previous track" << std::endl;
+        } else if (action == "voice_input") {
+            input_sim_.triggerVoiceInput();
+            std::cout << "Voice input" << std::endl;
+        } else if (action == "alt_tab") {
+            input_sim_.altTab();
+            std::cout << "Alt+Tab" << std::endl;
+        } else if (action == "win_tab") {
+            input_sim_.winTab();
+            std::cout << "Win+Tab" << std::endl;
+        } else if (action == "escape") {
+            input_sim_.escape();
+            std::cout << "Escape" << std::endl;
+        } else if (action == "enter") {
+            input_sim_.enter();
+            std::cout << "Enter" << std::endl;
+        } else if (action == "windows_key") {
+            input_sim_.winKey();
+            std::cout << "Windows key" << std::endl;
+        } else if (action == "screenshot") {
+            input_sim_.screenshot();
+            std::cout << "Screenshot" << std::endl;
+        } else if (action == "volume_up") {
+            input_sim_.volumeUp();
+            std::cout << "Volume up" << std::endl;
+        } else if (action == "volume_down") {
+            input_sim_.volumeDown();
+            std::cout << "Volume down" << std::endl;
+        } else if (action == "volume_mute") {
+            input_sim_.volumeMute();
+            std::cout << "Volume mute" << std::endl;
+        } else if (action == "browser_back") {
+            input_sim_.browserBack();
+            std::cout << "Browser back" << std::endl;
+        } else if (action == "browser_forward") {
+            input_sim_.browserForward();
+            std::cout << "Browser forward" << std::endl;
+        } else if (action == "increase_mouse_sensitivity") {
+            mouse_sensitivity_ = std::min(5.0f, mouse_sensitivity_ + 0.2f);
+            config_.setMouseSensitivity(mouse_sensitivity_);
+            config_.saveConfig("controller_config.txt");
+            std::cout << "Mouse sensitivity: " << mouse_sensitivity_ << std::endl;
+        } else if (action == "decrease_mouse_sensitivity") {
+            mouse_sensitivity_ = std::max(0.2f, mouse_sensitivity_ - 0.2f);
+            config_.setMouseSensitivity(mouse_sensitivity_);
+            config_.saveConfig("controller_config.txt");
+            std::cout << "Mouse sensitivity: " << mouse_sensitivity_ << std::endl;
+        } else if (action == "increase_scroll_sensitivity") {
+            scroll_sensitivity_ = std::min(5.0f, scroll_sensitivity_ + 0.2f);
+            config_.setScrollSensitivity(scroll_sensitivity_);
+            config_.saveConfig("controller_config.txt");
+            std::cout << "Scroll sensitivity: " << scroll_sensitivity_ << std::endl;
+        } else if (action == "decrease_scroll_sensitivity") {
+            scroll_sensitivity_ = std::max(0.2f, scroll_sensitivity_ - 0.2f);
+            config_.setScrollSensitivity(scroll_sensitivity_);
+            config_.saveConfig("controller_config.txt");
+            std::cout << "Scroll sensitivity: " << scroll_sensitivity_ << std::endl;
+        } else if (action == "exit") {
+            std::cout << "Exiting program..." << std::endl;
+            running_ = false;
+        }
+    }
+    
+    void handleButtonRelease(const std::string& action) {
+        if (action.empty()) return;
+        
+        if (action == "left_click" && left_mouse_held_) {
+            input_sim_.leftMouseUp();
+            left_mouse_held_ = false;
+            std::cout << "Left mouse up" << std::endl;
+        } else if (action == "right_click" && right_mouse_held_) {
+            input_sim_.rightMouseUp();
+            right_mouse_held_ = false;
+            std::cout << "Right mouse up" << std::endl;
+        }
+    }
+    
     void processGamepadInput() {
         if (!gamepad_.isConnected()) return;
         
         auto state = gamepad_.getState();
         
-        // Handle mouse button press/release with proper state tracking
+        // Handle button A
         if (state.button_a && !prev_button_a_) {
-            input_sim_.leftMouseDown();
-            left_mouse_held_ = true;
-            std::cout << "Left mouse down" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_a"));
         } else if (!state.button_a && prev_button_a_) {
-            input_sim_.leftMouseUp();
-            left_mouse_held_ = false;
-            std::cout << "Left mouse up" << std::endl;
+            handleButtonRelease(config_.getButtonAction("button_a"));
         }
         
+        // Handle button B
         if (state.button_b && !prev_button_b_) {
-            input_sim_.rightMouseDown();
-            right_mouse_held_ = true;
-            std::cout << "Right mouse down" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_b"));
         } else if (!state.button_b && prev_button_b_) {
-            input_sim_.rightMouseUp();
-            right_mouse_held_ = false;
-            std::cout << "Right mouse up" << std::endl;
+            handleButtonRelease(config_.getButtonAction("button_b"));
         }
         
         // Handle other button presses (only trigger on press)
         if (state.button_x && !prev_button_x_) {
-            media_ctrl_.playPause();
-            std::cout << "Play/Pause" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_x"));
         }
         
         if (state.button_y && !prev_button_y_) {
-            input_sim_.triggerVoiceInput();
-            std::cout << "Voice input" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_y"));
         }
         
         if (state.left_shoulder && !prev_left_shoulder_) {
-            input_sim_.winTab();
-            std::cout << "Win+Tab" << std::endl;
+            handleButtonAction(config_.getButtonAction("left_shoulder"));
         }
         
         if (state.right_shoulder && !prev_right_shoulder_) {
-            input_sim_.enter();
-            std::cout << "Enter" << std::endl;
+            handleButtonAction(config_.getButtonAction("right_shoulder"));
         }
         
-        // Back button: Escape key
         if (state.button_back && !prev_button_back_) {
-            input_sim_.escape();
-            std::cout << "Escape" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_back"));
         }
         
-        // Guide button: Windows key
         if (state.button_guide && !prev_button_guide_) {
-            input_sim_.winKey();
-            std::cout << "Windows key" << std::endl;
+            handleButtonAction(config_.getButtonAction("button_guide"));
         }
         
-        // Left stick button: Middle mouse click
         if (state.left_stick_button && !prev_left_stick_button_) {
-            input_sim_.middleClick();
-            std::cout << "Middle click" << std::endl;
+            handleButtonAction(config_.getButtonAction("left_stick_button"));
         }
         
-        // Right stick button: Screenshot (Win+Shift+S)
         if (state.right_stick_button && !prev_right_stick_button_) {
-            input_sim_.screenshot();
-            std::cout << "Screenshot" << std::endl;
+            handleButtonAction(config_.getButtonAction("right_stick_button"));
         }
         
-        // Trigger controls - Media control
+        if (state.button_start && !prev_button_start_) {
+            handleButtonAction(config_.getButtonAction("button_start"));
+        }
+        
+        // Handle triggers
         bool left_trigger_pressed = state.left_trigger > 0.5f;
         bool right_trigger_pressed = state.right_trigger > 0.5f;
         
         if (left_trigger_pressed && !prev_left_trigger_pressed_) {
-            media_ctrl_.previous();
-            std::cout << "Previous track" << std::endl;
+            handleButtonAction(config_.getButtonAction("left_trigger"));
         }
         
         if (right_trigger_pressed && !prev_right_trigger_pressed_) {
-            media_ctrl_.next();
-            std::cout << "Next track" << std::endl;
+            handleButtonAction(config_.getButtonAction("right_trigger"));
         }
         
         prev_left_trigger_pressed_ = left_trigger_pressed;
         prev_right_trigger_pressed_ = right_trigger_pressed;
         
-        if (state.button_start && !prev_button_start_) {
-            std::cout << "Exiting program..." << std::endl;
-            running_ = false;
-        }
-        
-        // Sensitivity adjustment with D-pad
+        // Handle D-pad
         if (state.dpad_up && !prev_dpad_up_) {
-            mouse_sensitivity_ = std::min(5.0f, mouse_sensitivity_ + 0.2f);
-            std::cout << "Mouse sensitivity: " << mouse_sensitivity_ << std::endl;
+            handleButtonAction(config_.getButtonAction("dpad_up"));
         }
         if (state.dpad_down && !prev_dpad_down_) {
-            mouse_sensitivity_ = std::max(0.2f, mouse_sensitivity_ - 0.2f);
-            std::cout << "Mouse sensitivity: " << mouse_sensitivity_ << std::endl;
+            handleButtonAction(config_.getButtonAction("dpad_down"));
         }
         if (state.dpad_right && !prev_dpad_right_) {
-            scroll_sensitivity_ = std::min(5.0f, scroll_sensitivity_ + 0.2f);
-            std::cout << "Scroll sensitivity: " << scroll_sensitivity_ << std::endl;
+            handleButtonAction(config_.getButtonAction("dpad_right"));
         }
         if (state.dpad_left && !prev_dpad_left_) {
-            scroll_sensitivity_ = std::max(0.2f, scroll_sensitivity_ - 0.2f);
-            std::cout << "Scroll sensitivity: " << scroll_sensitivity_ << std::endl;
+            handleButtonAction(config_.getButtonAction("dpad_left"));
         }
         
         // Update all previous button states

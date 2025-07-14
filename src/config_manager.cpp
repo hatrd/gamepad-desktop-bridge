@@ -25,14 +25,19 @@ void ConfigManager::loadDefaults() {
     button_mappings_["button_start"] = "exit";
     button_mappings_["button_back"] = "escape";
     button_mappings_["button_guide"] = "windows_key";
-    button_mappings_["left_shoulder"] = "win_tab";
+    button_mappings_["left_shoulder"] = "middle_click";
     button_mappings_["right_shoulder"] = "enter";
-    button_mappings_["left_stick_button"] = "middle_click";
+    button_mappings_["left_stick_button"] = "win_tab";
     button_mappings_["right_stick_button"] = "screenshot";
     button_mappings_["dpad_up"] = "increase_mouse_sensitivity";
     button_mappings_["dpad_down"] = "decrease_mouse_sensitivity";
     button_mappings_["dpad_left"] = "decrease_scroll_sensitivity";
     button_mappings_["dpad_right"] = "increase_scroll_sensitivity";
+    button_mappings_["left_trigger"] = "media_previous";
+    button_mappings_["right_trigger"] = "media_next";
+    
+    // 添加前进/后退和音量控制作为可选映射
+    // 用户可以在配置文件中手动设置这些映射到任意按键
 }
 
 bool ConfigManager::loadConfig(const std::string& filename) {
@@ -73,6 +78,7 @@ bool ConfigManager::saveConfig(const std::string& filename) {
     file << "#   media_play_pause, media_next, media_previous\n";
     file << "#   voice_input, alt_tab, win_tab, escape, enter\n";
     file << "#   windows_key, screenshot, volume_up, volume_down, volume_mute\n";
+    file << "#   browser_back, browser_forward\n";
     file << "#   increase/decrease_mouse/scroll_sensitivity, exit\n\n";
     
     for (const auto& mapping : button_mappings_) {

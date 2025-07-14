@@ -1,0 +1,40 @@
+# Xbox Controller API Configuration
+# Generated config file - feel free to edit
+
+# Sensitivity Settings
+mouse_sensitivity = 1
+scroll_sensitivity = 1
+invert_scroll = true
+
+# Button Mappings
+# Available actions:
+#   left_click, right_click, middle_click
+#   media_play_pause, media_next, media_previous
+#   voice_input, alt_tab, win_tab, escape, enter
+#   windows_key, screenshot, volume_up, volume_down, volume_mute
+#   browser_back, browser_forward
+#   increase/decrease_mouse/scroll_sensitivity, exit
+
+button_a = left_click
+button_b = right_click
+button_guide = windows_key
+button_start = exit
+button_x = media_play_pause
+button_y = voice_input
+button_back = escape
+dpad_down = decrease_mouse_sensitivity
+dpad_left = decrease_scroll_sensitivity
+dpad_right = increase_scroll_sensitivity
+dpad_up = increase_mouse_sensitivity
+left_shoulder = win_tab
+left_stick_button = middle_click
+left_trigger = media_previous
+right_shoulder = enter
+right_stick_button = screenshot
+right_trigger = media_next
+
+# 示例：如果你想要添加前进/后退和音量控制功能，可以修改上面的映射，例如：
+# dpad_left = volume_down
+# dpad_right = volume_up
+# left_trigger = browser_back
+# right_trigger = browser_forward

@@ -494,6 +494,78 @@ void InputSimulator::volumeMute() {
 #endif
 }
 
+void InputSimulator::browserBack() {
+#ifdef _WIN32
+    // Alt + Left Arrow
+    keybd_event(VK_MENU, 0, 0, 0);  // Alt down
+    keybd_event(VK_LEFT, 0, 0, 0);  // Left arrow down
+    keybd_event(VK_LEFT, 0, KEYEVENTF_KEYUP, 0);  // Left arrow up
+    keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);  // Alt up
+#elif __linux__
+    if (display_) {
+        KeyCode alt = XKeysymToKeycode(display_, XK_Alt_L);
+        KeyCode left = XKeysymToKeycode(display_, XK_Left);
+        XTestFakeKeyEvent(display_, alt, True, CurrentTime);
+        XTestFakeKeyEvent(display_, left, True, CurrentTime);
+        XTestFakeKeyEvent(display_, left, False, CurrentTime);
+        XTestFakeKeyEvent(display_, alt, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Cmd + Left
+    CGEventRef cmd_down = CGEventCreateKeyboardEvent(NULL, kVK_Command, true);
+    CGEventRef left_down = CGEventCreateKeyboardEvent(NULL, kVK_LeftArrow, true);
+    CGEventRef left_up = CGEventCreateKeyboardEvent(NULL, kVK_LeftArrow, false);
+    CGEventRef cmd_up = CGEventCreateKeyboardEvent(NULL, kVK_Command, false);
+    
+    CGEventPost(kCGHIDEventTap, cmd_down);
+    CGEventPost(kCGHIDEventTap, left_down);
+    CGEventPost(kCGHIDEventTap, left_up);
+    CGEventPost(kCGHIDEventTap, cmd_up);
+    
+    CFRelease(cmd_down);
+    CFRelease(left_down);
+    CFRelease(left_up);
+    CFRelease(cmd_up);
+#endif
+}
+
+void InputSimulator::browserForward() {
+#ifdef _WIN32
+    // Alt + Right Arrow
+    keybd_event(VK_MENU, 0, 0, 0);  // Alt down
+    keybd_event(VK_RIGHT, 0, 0, 0);  // Right arrow down
+    keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);  // Right arrow up
+    keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);  // Alt up
+#elif __linux__
+    if (display_) {
+        KeyCode alt = XKeysymToKeycode(display_, XK_Alt_L);
+        KeyCode right = XKeysymToKeycode(display_, XK_Right);
+        XTestFakeKeyEvent(display_, alt, True, CurrentTime);
+        XTestFakeKeyEvent(display_, right, True, CurrentTime);
+        XTestFakeKeyEvent(display_, right, False, CurrentTime);
+        XTestFakeKeyEvent(display_, alt, False, CurrentTime);
+        XFlush(display_);
+    }
+#elif __APPLE__
+    // macOS Cmd + Right
+    CGEventRef cmd_down = CGEventCreateKeyboardEvent(NULL, kVK_Command, true);
+    CGEventRef right_down = CGEventCreateKeyboardEvent(NULL, kVK_RightArrow, true);
+    CGEventRef right_up = CGEventCreateKeyboardEvent(NULL, kVK_RightArrow, false);
+    CGEventRef cmd_up = CGEventCreateKeyboardEvent(NULL, kVK_Command, false);
+    
+    CGEventPost(kCGHIDEventTap, cmd_down);
+    CGEventPost(kCGHIDEventTap, right_down);
+    CGEventPost(kCGHIDEventTap, right_up);
+    CGEventPost(kCGHIDEventTap, cmd_up);
+    
+    CFRelease(cmd_down);
+    CFRelease(right_down);
+    CFRelease(right_up);
+    CFRelease(cmd_up);
+#endif
+}
+
 // Private helper methods
 #ifdef _WIN32
 void InputSimulator::simulateKeyPress(WORD key, bool key_down) {
